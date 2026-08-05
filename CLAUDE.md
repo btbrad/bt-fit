@@ -19,12 +19,15 @@ bt-fit/
 ├── pages.json           # 页面路由与全局样式（navigationBar 等）
 ├── uni.scss             # 公共样式变量
 └── pages/
-    └── index/index.vue  # 主页：录入 / 列表 / 概览，数据存于本地 storage
+    └── index/           # 主页目录
+        ├── index.vue    # 主页：组合各组件，数据存于本地 storage
+        └── components/  # 主页专属（非全局）组件：AppHeader / WeightSummary / RecordForm / RecordList
 ```
 
 ## 编码约定
 
-- **尽量使用 Vue 3 语法**：新写或重构组件时，优先使用 **Composition API + `<script setup>`**（`ref` / `reactive` / `computed` / `watch`），而不是 Options API（`data()` / `methods`）。现有的 `pages/index/index.vue` 仍是 Options API 写法，可按需逐步迁移。
+- **尽量使用 Vue 3 语法**：新写或重构组件时，优先使用 **Composition API + `<script setup>`**（`ref` / `reactive` / `computed` / `watch`），而不是 Options API（`data()` / `methods`）。`pages/index/index.vue` 及其子组件均已采用 `<script setup>`。
+- **组件就近放置**：非全局（页面专属）组件放在对应页面目录下的 `components/` 子目录里（如 `pages/index/components/`），并在页面中用相对路径引入（`import X from './components/X.vue'`）；只有真正跨页面复用的全局组件才放到与 `pages/` 同级的 `components/` 目录。
 - uni-app 页面生命周期（`onLoad` / `onShow` / `onReady` / `onHide` 等）需从 `@dcloudio/uni-app` 导入后在 `<script setup>` 中调用，例如：
   ```js
   import { onLoad } from '@dcloudio/uni-app'
