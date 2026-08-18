@@ -25,6 +25,7 @@
 	import RecordList from './components/RecordList.vue'
 
 	const STORAGE_KEY = 'bt_fit_weight_records'
+	const USER_KEY = 'bt_fit_user'
 
 	// 响应式状态
 	const records = ref([])
@@ -85,6 +86,12 @@
 
 	// 页面生命周期
 	onLoad(() => {
+		// 登录态校验：未登录则跳回登录页
+		const user = uni.getStorageSync(USER_KEY)
+		if (!user || !user.name) {
+			uni.reLaunch({ url: '/pages/login/login' })
+			return
+		}
 		loadRecords()
 	})
 </script>
