@@ -52,11 +52,10 @@
 <script setup>
 	import { ref, computed } from 'vue'
 	import { onLoad } from '@dcloudio/uni-app'
+	import { loginApi } from '@/api/index.js'
 
 	const USER_KEY = 'bt_fit_user'
-
-	// 演示账号（无后端，本地校验）
-	const DEMO_ACCOUNT = { username: 'admin', password: '123456' }
+	const TOKEN_KEY = 'bt_fit_token'
 
 	// 响应式状态
 	const username = ref('')
@@ -65,20 +64,32 @@
 
 	const canSubmit = computed(() => username.value.trim() !== '' && password.value !== '')
 
-	// 登录
-	const onLogin = () => {
+	// 登录（调用后端接口）
+	const onLogin = async () => {
 		if (!canSubmit.value) return
 
-		if (username.value.trim() !== DEMO_ACCOUNT.username || password.value !== DEMO_ACCOUNT.password) {
-			uni.showToast({ title: '用户名或密码错误', icon: 'none' })
-			return
-		}
+		try {
+			const data = await loginApi({
+				username: username.value.trim(),
+				password: password.value
+			})
 
-		uni.setStorageSync(USER_KEY, { name: DEMO_ACCOUNT.username, loginTime: Date.now() })
-		uni.showToast({ title: '登录成功 🎉', icon: 'none' })
-		setTimeout(() => {
-			uni.reLaunch({ url: '/pages/index/index' })
-		}, 400)
+			// 保存登录态：token 供 request.js 自动携带，用户信息供页面展示/登录判断
+			if (data.token) {
+				uni.setStorageSync(TOKEN_KEY, data.token)
+			}
+			uni.setStorageSync(USER_KEY, {
+				name: data.username || username.value.trim(),
+				loginTime: Date.now()
+			})
+
+			uni.showToast({ title: '登录成功 🎉', icon: 'none' })
+			setTimeout(() => {
+				uni.reLaunch({ url: '/pages/index/index' })
+			}, 400)
+		} catch (err) {
+			// 失败提示已由 request.js 统一 toast，这里无需额外处理
+		}
 	}
 
 	// 已登录则直接进入主页
