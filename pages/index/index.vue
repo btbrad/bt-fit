@@ -7,42 +7,81 @@
 		<WeightSummary :records="records" />
 
 		<!-- 录入 / 修改 -->
-		<RecordForm :editing="editing" @submit="onSubmit" @cancel="editing = null" />
+		<RecordForm ref="recordFormRef" :editing="editing" @submit="onSubmit" @cancel="editing = null" />
 
 		<!-- 列表 -->
 		<RecordList :records="records" @edit="onEdit" @remove="onRemove" />
 
-		<view class="footer-tip">💡 数据保存在本地，请勿随意清理缓存</view>
+		<view v-if="records.length" class="load-more">
+			<text v-if="loadingMore">加载中...</text>
+			<text v-else-if="!hasMore">— 没有更多了 —</text>
+		</view>
 	</view>
 </template>
 
 <script setup>
 	import { ref } from 'vue'
-	import { onLoad } from '@dcloudio/uni-app'
+	import { onLoad, onReachBottom } from '@dcloudio/uni-app'
 	import AppHeader from './components/AppHeader.vue'
 	import WeightSummary from './components/WeightSummary.vue'
 	import RecordForm from './components/RecordForm.vue'
 	import RecordList from './components/RecordList.vue'
-	import { addWeightRecordApi } from '@/api/index.js'
+	import { addWeightRecordApi, getWeightRecordsApi } from '@/api/index.js'
 
-	const STORAGE_KEY = 'bt_fit_weight_records'
 	const USER_KEY = 'bt_fit_user'
 
 	// 响应式状态
 	const records = ref([])
 	const editing = ref(null) // 正在编辑的记录对象，null 表示新增态
+	const recordFormRef = ref(null) // RecordForm 实例，用于新增成功后清空体重输入
+	const PER_PAGE = 20 // 每页条数
+	const page = ref(1) // 当前页码
+	const hasMore = ref(true) // 是否还有下一页
+	const loadingMore = ref(false) // 上拉加载锁，防止重复触发
 
-	// 本地存储
+	// 拉取指定页数据；refresh 为 true 时重置到第一页并清空列表
+	const fetchRecords = async (refresh = false) => {
+		if (loadingMore.value) return
+		if (!refresh && !hasMore.value) return
+		loadingMore.value = true
+		try {
+			const data = await getWeightRecordsApi({ page: page.value, per_page: PER_PAGE })
+			// 兼容后端直接返回数组，或 { list/items/records, total } 两种结构
+			const list = Array.isArray(data) ? data : (data.list || data.items || data.records || [])
+			const normalized = list.map(normalizeRecord)
+			records.value = refresh ? normalized : records.value.concat(normalized)
+			// 本页不满一页或已累计全部 total，说明没有更多
+			const total = Array.isArray(data) || data.total === undefined ? null : +data.total
+			hasMore.value = list.length === PER_PAGE && (total === null || records.value.length < total)
+			if (hasMore.value) page.value++
+		} catch (e) {
+			// 失败提示由 request 封装统一 toast
+		} finally {
+			loadingMore.value = false
+		}
+	}
+
+	// 首次进入 / 刷新：回到第一页
 	const loadRecords = () => {
-		const data = uni.getStorageSync(STORAGE_KEY)
-		records.value = Array.isArray(data) ? data : []
+		page.value = 1
+		hasMore.value = true
+		records.value = []
+		fetchRecords(true)
 	}
 
-	const persist = () => {
-		uni.setStorageSync(STORAGE_KEY, records.value)
+	// 上拉触底：加载下一页
+	const onReachBottomHandler = () => {
+		fetchRecords()
 	}
 
-	// 表单提交：新增（调用接口）或更新（本地）
+	// 字段归一化：后端 id / recorded_at / weight -> 前端 id / date / weight
+	const normalizeRecord = (item) => ({
+		id: String(item.id),
+		date: String(item.recorded_at || '').slice(0, 10),
+		weight: +item.weight
+	})
+
+	// 表单提交：新增（调用接口后拉取最新列表）或更新（本地）
 	const onSubmit = async ({ id, date, weight }) => {
 		if (id) {
 			const idx = records.value.findIndex(r => r.id === id)
@@ -51,7 +90,6 @@
 			}
 			uni.showToast({ title: '已更新 ✅', icon: 'none' })
 			editing.value = null
-			persist()
 			return
 		}
 		try {
@@ -60,12 +98,9 @@
 				recorded_at: date
 			})
 			uni.showToast({ title: '记录成功 🎉', icon: 'none' })
-			records.value.push({
-				id: String(Date.now()),
-				date,
-				weight
-			})
-			persist()
+			recordFormRef.value && recordFormRef.value.resetWeight()
+			// 重新拉取第一页，以服务端数据为准
+			loadRecords()
 		} catch (e) {
 			// 失败提示由 request 封装统一 toast，这里只需保持表单不重置
 		}
@@ -87,7 +122,6 @@
 				if (res.confirm) {
 					records.value = records.value.filter(r => r.id !== id)
 					if (editing.value && editing.value.id === id) editing.value = null
-					persist()
 					uni.showToast({ title: '已删除 🗑️', icon: 'none' })
 				}
 			}
@@ -104,6 +138,9 @@
 		}
 		loadRecords()
 	})
+
+	// 上拉触底加载下一页
+	onReachBottom(onReachBottomHandler)
 </script>
 
 <style>
@@ -114,10 +151,10 @@
 		box-sizing: border-box;
 	}
 
-	.footer-tip {
-		margin-top: 36rpx;
+	.load-more {
+		margin-top: 24rpx;
 		text-align: center;
-		font-size: 22rpx;
+		font-size: 24rpx;
 		color: #b6bfbb;
 	}
 </style>

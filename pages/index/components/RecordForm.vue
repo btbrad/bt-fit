@@ -72,6 +72,13 @@
 	const cancel = () => {
 		emit('cancel')
 	}
+
+	// 清空体重输入（日期保留为当天），供父组件在新增成功后调用
+	const resetWeight = () => {
+		form.weight = ''
+	}
+
+	defineExpose({ resetWeight })
 </script>
 
 <style scoped>
