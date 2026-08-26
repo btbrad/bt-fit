@@ -7,3 +7,4 @@
  * 新增接口：按模块建文件（如 weight.js、user.js），在此处 export * 挂载
  */
 export * from './login.js'
+export * from './home.js'

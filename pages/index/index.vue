@@ -23,6 +23,7 @@
 	import WeightSummary from './components/WeightSummary.vue'
 	import RecordForm from './components/RecordForm.vue'
 	import RecordList from './components/RecordList.vue'
+	import { addWeightRecordApi } from '@/api/index.js'
 
 	const STORAGE_KEY = 'bt_fit_weight_records'
 	const USER_KEY = 'bt_fit_user'
@@ -41,24 +42,33 @@
 		uni.setStorageSync(STORAGE_KEY, records.value)
 	}
 
-	// 表单提交：新增或更新
-	const onSubmit = ({ id, date, weight }) => {
+	// 表单提交：新增（调用接口）或更新（本地）
+	const onSubmit = async ({ id, date, weight }) => {
 		if (id) {
 			const idx = records.value.findIndex(r => r.id === id)
 			if (idx > -1) {
 				records.value.splice(idx, 1, { ...records.value[idx], date, weight })
 			}
 			uni.showToast({ title: '已更新 ✅', icon: 'none' })
-		} else {
+			editing.value = null
+			persist()
+			return
+		}
+		try {
+			await addWeightRecordApi({
+				weight,
+				recorded_at: date
+			})
+			uni.showToast({ title: '记录成功 🎉', icon: 'none' })
 			records.value.push({
 				id: String(Date.now()),
 				date,
 				weight
 			})
-			uni.showToast({ title: '记录成功 🎉', icon: 'none' })
+			persist()
+		} catch (e) {
+			// 失败提示由 request 封装统一 toast，这里只需保持表单不重置
 		}
-		editing.value = null
-		persist()
 	}
 
 	// 点击列表项进入编辑
