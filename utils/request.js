@@ -10,9 +10,13 @@
  *   this.$http.post('/login', { username, password })
  */
 
-// ========== 接口基础配置（按实际后端修改） ==========
-const BASE_URL = 'http://127.0.0.1:5000' // 后端地址，TODO: 替换
-const TIMEOUT = 10000 // 请求超时（毫秒）
+// ========== 接口基础配置 ==========
+// 真实环境地址放在 config/env.local.js（已被 .gitignore 忽略，不进仓库）；
+// 仓库内只保留 config/env.example.js 模板。env.local.js 不存在时回退到示例配置（本地开发）。
+import envConfig from '@/config/env.local.js'
+
+const BASE_URL = envConfig.baseUrl || 'http://127.0.0.1:5000'
+const TIMEOUT = envConfig.timeout || 10000 // 请求超时（毫秒）
 const TOKEN_KEY = 'bt_fit_token' // 登录态 token 的存储键
 const LOGIN_PAGE = '/pages/login/login' // 登录失效后跳转的页面
 

@@ -1,4 +1,4 @@
-<template>
+  <template>
 	<view class="form-card">
 		<view class="form-title">{{ editing ? '✏️ 修改记录' : '➕ 新增记录' }}</view>
 		<view class="form-row">
