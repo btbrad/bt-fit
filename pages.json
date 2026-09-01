@@ -12,8 +12,40 @@
 			"style": {
 				"navigationBarTitleText": "体重记录"
 			}
+		},
+		{
+			"path": "pages/profile/profile",
+			"style": {
+				"navigationBarTitleText": "我的"
+			}
+		},
+		{
+			"path": "pages/profile/about",
+			"style": {
+				"navigationBarTitleText": "应用信息"
+			}
 		}
 	],
+	"tabBar": {
+		"color": "#9aa8a2",
+		"selectedColor": "#10b981",
+		"backgroundColor": "#ffffff",
+		"borderStyle": "black",
+		"list": [
+			{
+				"pagePath": "pages/index/index",
+				"text": "首页",
+				"iconPath": "static/tab-home.png",
+				"selectedIconPath": "static/tab-home-active.png"
+			},
+			{
+				"pagePath": "pages/profile/profile",
+				"text": "我的",
+				"iconPath": "static/tab-user.png",
+				"selectedIconPath": "static/tab-user-active.png"
+			}
+		]
+	},
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "体重记录",

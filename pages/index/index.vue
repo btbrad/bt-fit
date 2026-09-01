@@ -21,7 +21,7 @@
 
 <script setup>
 	import { ref } from 'vue'
-	import { onLoad, onReachBottom } from '@dcloudio/uni-app'
+	import { onShow, onReachBottom } from '@dcloudio/uni-app'
 	import AppHeader from './components/AppHeader.vue'
 	import WeightSummary from './components/WeightSummary.vue'
 	import RecordForm from './components/RecordForm.vue'
@@ -129,7 +129,7 @@
 	}
 
 	// 页面生命周期
-	onLoad(() => {
+	onShow(() => {
 		// 登录态校验：未登录则跳回登录页
 		const user = uni.getStorageSync(USER_KEY)
 		if (!user || !user.name) {
