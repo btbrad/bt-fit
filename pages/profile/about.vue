@@ -28,15 +28,30 @@
 <script setup>
 	import { ref } from 'vue'
 
-	// 应用信息：版本号取自 manifest.json，发布新版本时改一处即可
-	const version = ref('0.0.2')
+	// 应用信息：App/微信小程序端运行时读取打包版本，其他端回退到常量（发布新版本时与 manifest 同步修改）
+	function getAppVersion() {
+		// #ifdef APP-PLUS
+		const info = uni.getSystemInfoSync()
+		console.log('App 端运行时版本号：', info)
+		// 真机调试跑在基座里时 appVersion 是基座版本，appWgtVersion 才是项目 manifest 的 versionName；云打包正式包后两者一致
+		return info.appWgtVersion || info.appVersion
+		// #endif
+		// #ifdef MP-WEIXIN
+		// 开发版返回 "develop"，体验/正式版返回对应版本号，均回退到常量
+		const mpVersion = uni.getAccountInfoSync().miniProgram.version
+		if (mpVersion && mpVersion !== 'develop') return mpVersion
+		// #endif
+		return '0.0.2'
+	}
+
+	const version = ref(getAppVersion())
 
 	// 信息列表配置
 	const infos = [
-		{ label: '当前版本', value: 'v0.0.2' },
+		{ label: '当前版本', value: `v${version.value}` },
 		{ label: '应用简介', value: '简洁好用的体重记录工具' },
 		{ label: '更新日期', value: '2026-09-01' },
-		{ label: '联系我们', value: 'support@bt-fit.app' }
+		{ label: '联系我们', value: 'ahfybt@126.com' }
 	]
 </script>
 
