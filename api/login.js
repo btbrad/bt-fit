@@ -11,3 +11,11 @@ export const loginApi = (data) => {
 	// 登录前无 token，不携带登录态
 	return $http.post('/api/login', data, { auth: false })
 }
+
+/**
+ * 退出登录
+ * @returns {Promise} resolve 后端返回的 data
+ */
+export const logoutApi = () => {
+	return $http.post('/api/logout')
+}

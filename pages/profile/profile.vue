@@ -39,6 +39,7 @@
 <script setup>
 	import { ref, computed } from 'vue'
 	import { onShow } from '@dcloudio/uni-app'
+	import { logoutApi } from '@/api/index.js'
 
 	const USER_KEY = 'bt_fit_user'
 	const TOKEN_KEY = 'bt_fit_token'
@@ -68,20 +69,24 @@
 		uni.showToast({ title: `${item.label}（开发中）`, icon: 'none' })
 	}
 
-	// 退出登录：二次确认后清空登录态并回到登录页
+	// 退出登录：二次确认后调用后端接口，成功再清空登录态并回到登录页
 	const onLogout = () => {
 		uni.showModal({
 			title: '退出登录',
 			content: '确定要退出当前账号吗？',
 			confirmColor: '#e5484d',
-			success: res => {
-				if (res.confirm) {
+			success: async res => {
+				if (!res.confirm) return
+				try {
+					await logoutApi()
 					uni.removeStorageSync(TOKEN_KEY)
 					uni.removeStorageSync(USER_KEY)
 					uni.showToast({ title: '已退出登录', icon: 'none' })
 					setTimeout(() => {
 						uni.reLaunch({ url: '/pages/login/login' })
 					}, 400)
+				} catch (err) {
+					// 失败提示已由 request.js 统一 toast，接口失败则保持登录态
 				}
 			}
 		})
@@ -198,8 +203,7 @@
 
 	/* 底部退出登录按钮 */
 	.logout-wrap {
-		margin-top: auto;
-		padding-top: 80rpx;
+		padding-top: 40rpx;
 	}
 	.logout-btn {
 		height: 92rpx;
