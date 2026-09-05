@@ -75,8 +75,12 @@
 		{ key: 'about', label: '应用信息', icon: 'ℹ️', bg: 'linear-gradient(135deg, #81c784 0%, #66bb6a 100%)' }
 	]
 
-	// 菜单点击：应用信息跳转详情页，其余暂未实现
+	// 菜单点击：个人信息/应用信息跳转详情页，其余暂未实现
 	const onMenuTap = (item) => {
+		if (item.key === 'info') {
+			uni.navigateTo({ url: '/pages/profile/info' })
+			return
+		}
 		if (item.key === 'about') {
 			uni.navigateTo({ url: '/pages/profile/about' })
 			return

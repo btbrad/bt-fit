@@ -20,6 +20,12 @@
 			}
 		},
 		{
+			"path": "pages/profile/info",
+			"style": {
+				"navigationBarTitleText": "个人信息"
+			}
+		},
+		{
 			"path": "pages/profile/about",
 			"style": {
 				"navigationBarTitleText": "应用信息"
