@@ -3,7 +3,8 @@
 		<!-- 用户信息卡片 -->
 		<view class="profile-card">
 			<view class="avatar">
-				<text class="avatar-text">{{ avatarText }}</text>
+				<image v-if="avatarUrl" class="avatar-img" :src="avatarUrl" mode="aspectFill" />
+				<text v-else class="avatar-text">{{ avatarText }}</text>
 			</view>
 			<text class="nickname">{{ nickname }}</text>
 			<view class="slogan">
@@ -39,19 +40,33 @@
 <script setup>
 	import { ref, computed } from 'vue'
 	import { onShow } from '@dcloudio/uni-app'
-	import { logoutApi } from '@/api/index.js'
+	import { getProfileApi, logoutApi } from '@/api/index.js'
 
 	const USER_KEY = 'bt_fit_user'
 	const TOKEN_KEY = 'bt_fit_token'
 
 	// 响应式状态
 	const nickname = ref('')
+	const avatarUrl = ref('')
 
 	// 头像展示昵称首字
 	const avatarText = computed(() => {
 		const name = nickname.value.trim()
 		return name ? name.charAt(0).toUpperCase() : '我'
 	})
+
+	// 获取用户信息：接口返回后替换头像与昵称，失败则回退本地缓存
+	const fetchProfile = async () => {
+		try {
+			const data = await getProfileApi()
+			nickname.value = data.nickname || data.name || ''
+			avatarUrl.value = typeof data.avatar === 'string' && data.avatar.trim() ? data.avatar : ''
+		} catch (err) {
+			const user = uni.getStorageSync(USER_KEY)
+			nickname.value = user && user.name ? user.name : ''
+			avatarUrl.value = ''
+		}
+	}
 
 	// 菜单配置
 	const menus = [
@@ -100,6 +115,7 @@
 			return
 		}
 		nickname.value = user.name
+		fetchProfile()
 	})
 </script>
 
@@ -139,6 +155,11 @@
 		font-size: 72rpx;
 		font-weight: 600;
 		color: #ffffff;
+	}
+	.avatar-img {
+		width: 100%;
+		height: 100%;
+		border-radius: 50%;
 	}
 	.nickname {
 		margin-top: 36rpx;
