@@ -16,3 +16,15 @@ export const getProfileApi = () => {
 export const updateProfileApi = (data) => {
 	return $http.put('/api/profile', data)
 }
+
+/**
+ * 修改密码
+ * @param {Object} data 请求参数
+ * @param {string} data.old_password 原密码
+ * @param {string} data.new_password 新密码
+ * @param {string} data.confirm_password 确认密码
+ * @returns {Promise} resolve 后端返回的 data
+ */
+export const changePasswordApi = (data) => {
+	return $http.post('/api/change-password', data)
+}

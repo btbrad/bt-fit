@@ -26,6 +26,12 @@
 			}
 		},
 		{
+			"path": "pages/profile/password",
+			"style": {
+				"navigationBarTitleText": "修改密码"
+			}
+		},
+		{
 			"path": "pages/profile/about",
 			"style": {
 				"navigationBarTitleText": "应用信息"
