@@ -21,7 +21,7 @@ bt-fit/
 └── pages/
     └── index/           # 主页目录
         ├── index.vue    # 主页：组合各组件，数据存于本地 storage
-        └── components/  # 主页专属（非全局）组件：AppHeader / WeightSummary / RecordForm / RecordList
+        └── components/  # 主页专属（非全局）组件：AppHeader / BmiCard / WeightSummary / RecordForm / RecordList
 ```
 
 ## 编码约定

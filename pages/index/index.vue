@@ -3,6 +3,9 @@
 		<!-- 顶部标题 -->
 		<AppHeader />
 
+		<!-- BMI 分析卡片（顶部） -->
+		<BmiCard ref="bmiCardRef" :records="records" />
+
 		<!-- 数据概览 -->
 		<WeightSummary :records="records" />
 
@@ -23,6 +26,7 @@
 	import { ref } from 'vue'
 	import { onShow, onReachBottom } from '@dcloudio/uni-app'
 	import AppHeader from './components/AppHeader.vue'
+	import BmiCard from './components/BmiCard.vue'
 	import WeightSummary from './components/WeightSummary.vue'
 	import RecordForm from './components/RecordForm.vue'
 	import RecordList from './components/RecordList.vue'
@@ -34,6 +38,7 @@
 	const records = ref([])
 	const editing = ref(null) // 正在编辑的记录对象，null 表示新增态
 	const recordFormRef = ref(null) // RecordForm 实例，用于新增成功后清空体重输入
+	const bmiCardRef = ref(null) // BmiCard 实例，用于页面 onShow 时刷新个人信息（如从个人信息页返回）
 	const PER_PAGE = 20 // 每页条数
 	const page = ref(1) // 当前页码
 	const hasMore = ref(true) // 是否还有下一页
@@ -137,6 +142,7 @@
 			return
 		}
 		loadRecords()
+		bmiCardRef.value && bmiCardRef.value.refresh()
 	})
 
 	// 上拉触底加载下一页
