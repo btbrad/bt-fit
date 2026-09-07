@@ -1,0 +1,7 @@
+{
+	"id": "uni-icons",
+	"displayName": "uni-icons 图标",
+	"version": "1.5.12",
+	"description": "uni-app 官方图标组件，基于 iconfont，全端兼容",
+	"keywords": ["icon", "图标"]
+}

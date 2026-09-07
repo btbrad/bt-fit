@@ -17,8 +17,11 @@ export const addWeightRecordApi = (data) => {
  * @param {Object} params 查询参数
  * @param {number} params.page 页码，默认 1
  * @param {number} params.per_page 每页条数
+ * @param {string} [params.start] 起始日期 YYYY-MM-DD（可选；后端不支持时由前端过滤）
+ * @param {string} [params.end] 结束日期 YYYY-MM-DD（可选；后端不支持时由前端过滤）
+ * @param {Object} [options] 透传给 request 封装（如 { loading: false }）
  * @returns {Promise} resolve 后端返回的 data（约定含记录列表与分页信息）
  */
-export const getWeightRecordsApi = (params) => {
-	return $http.get('/api/weight-records', params)
+export const getWeightRecordsApi = (params, options = {}) => {
+	return $http.get('/api/weight-records', params, options)
 }

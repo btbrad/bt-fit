@@ -14,6 +14,12 @@
 			}
 		},
 		{
+			"path": "pages/data/data",
+			"style": {
+				"navigationBarTitleText": "数据"
+			}
+		},
+		{
 			"path": "pages/profile/profile",
 			"style": {
 				"navigationBarTitleText": "我的"
@@ -43,18 +49,46 @@
 		"selectedColor": "#10b981",
 		"backgroundColor": "#ffffff",
 		"borderStyle": "black",
+		"iconfontSrc": "static/uniicons.ttf",
 		"list": [
 			{
 				"pagePath": "pages/index/index",
 				"text": "首页",
 				"iconPath": "static/tab-home.png",
-				"selectedIconPath": "static/tab-home-active.png"
+				"selectedIconPath": "static/tab-home-active.png",
+				"iconfont": {
+					"text": "",
+					"selectedText": "",
+					"fontSize": "24px",
+					"color": "#9aa8a2",
+					"selectedColor": "#10b981"
+				}
+			},
+			{
+				"pagePath": "pages/data/data",
+				"text": "数据",
+				"iconPath": "static/tab-data.png",
+				"selectedIconPath": "static/tab-data-active.png",
+				"iconfont": {
+					"text": "",
+					"selectedText": "",
+					"fontSize": "24px",
+					"color": "#9aa8a2",
+					"selectedColor": "#10b981"
+				}
 			},
 			{
 				"pagePath": "pages/profile/profile",
 				"text": "我的",
 				"iconPath": "static/tab-user.png",
-				"selectedIconPath": "static/tab-user-active.png"
+				"selectedIconPath": "static/tab-user-active.png",
+				"iconfont": {
+					"text": "",
+					"selectedText": "",
+					"fontSize": "24px",
+					"color": "#9aa8a2",
+					"selectedColor": "#10b981"
+				}
 			}
 		]
 	},

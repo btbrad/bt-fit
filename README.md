@@ -6,6 +6,7 @@
 
 - **登录 / 退出**：账号密码登录，token 失效自动跳转登录页
 - **体重记录**：录入 / 编辑 / 删除体重记录，分页加载、上拉加载更多
+- **数据趋势**：折线图查看体重走势（基于 uCharts 图表组件），支持近 7 / 30 / 90 天与自定义日期范围（默认近 30 天）
 - **BMI 分析**：根据最新身高体重计算 BMI 并给出体型评价
 - **数据概览**：统计记录天数、最新体重、目标体重差值等
 - **个人中心**：查看 / 修改个人信息（昵称、身高、目标体重等）、修改密码
@@ -15,6 +16,8 @@
 
 - **uni-app**（DCloud）：`manifest.json` / `pages.json` 配置多端编译
 - **Vue 3**：Composition API + `<script setup>`
+- **uCharts（qiun-data-charts）**：跨全端图表组件，`uni_modules` 随仓库提交，用于数据页折线图
+- **uni-icons**：官方图标组件，`uni_modules` 随仓库提交；tabBar 图标在 H5 / App 端走 iconfont（`pages.json` 的 `iconfontSrc`），小程序端使用同字库渲染的 PNG（`static/tab-*.png`）
 - 样式：`rpx` 单位，卡片化布局，薄荷绿配色（公共变量见 `uni.scss`）
 
 ## 目录结构
@@ -34,6 +37,8 @@
 │   │       ├── WeightSummary.vue    # 数据概览
 │   │       ├── RecordForm.vue       # 录入 / 修改表单
 │   │       └── RecordList.vue       # 记录列表
+│   ├── data/
+│   │   └── data.vue         # 数据（tabBar 页）：日期范围选择 + 折线图 + 区间统计
 │   └── profile/
 │       ├── profile.vue      # 我的（tabBar 页）
 │       ├── info.vue         # 个人信息
@@ -44,6 +49,9 @@
 │   ├── login.js             # 登录 / 退出
 │   ├── home.js              # 体重记录
 │   └── profile.js           # 用户信息 / 修改密码
+├── uni_modules/             # uni-app 插件（随仓库提交，无需额外安装）
+│   ├── qiun-data-charts/    # uCharts 图表组件（数据页折线图）
+│   └── uni-icons/           # 官方图标组件（easycom 自动注册）
 ├── utils/request.js         # 全局 HTTP 封装（基于 uni.request，$http）
 └── config/
     ├── env.example.js       # 环境配置模板
@@ -87,7 +95,7 @@
 | PUT | `/api/profile` | 修改用户信息 |
 | POST | `/api/change-password` | 修改密码 |
 | POST | `/api/weight-records` | 新增体重记录 |
-| GET | `/api/weight-records` | 分页查询体重记录（`page` / `per_page`） |
+| GET | `/api/weight-records` | 分页查询体重记录（`page` / `per_page`，可选 `start_date` / `end_date`） |
 
 ## 编码约定
 
