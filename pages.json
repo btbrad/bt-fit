@@ -14,6 +14,12 @@
 			}
 		},
 		{
+			"path": "pages/records/records",
+			"style": {
+				"navigationBarTitleText": "记录列表"
+			}
+		},
+		{
 			"path": "pages/data/data",
 			"style": {
 				"navigationBarTitleText": "数据"

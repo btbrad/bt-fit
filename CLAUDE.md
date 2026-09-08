@@ -12,16 +12,21 @@
 ## 目录结构
 
 ```
-bt-fit/
 ├── App.vue              # 应用入口（onLaunch/onShow/onHide 生命周期）
 ├── main.js              # createApp，含 VUE2/VUE3 条件编译
 ├── manifest.json        # uni-app 应用配置（appid、各端打包配置）
 ├── pages.json           # 页面路由与全局样式（navigationBar 等）
 ├── uni.scss             # 公共样式变量
+├── api/                 # 接口封装（login / home / profile），统一从 api/index.js 导出
+├── components/          # 跨页面复用的全局组件：RecordForm（首页新增 + 记录列表页编辑共用）
 └── pages/
-    └── index/           # 主页目录
-        ├── index.vue    # 主页：组合各组件，数据存于本地 storage
-        └── components/  # 主页专属（非全局）组件：AppHeader / BmiCard / WeightSummary / RecordForm / RecordList
+    ├── index/           # 主页：AppHeader / BmiCard / WeightSummary + 新增记录表单
+    │   └── components/  # 主页专属（非全局）组件：AppHeader / BmiCard / WeightSummary
+    ├── records/         # 记录列表页：日期筛选（默认近7天）+ 上拉分页列表 + 编辑表单，从首页「记录数」点击进入
+    │   └── components/  # RecordList
+    ├── data/            # 数据趋势页（折线图 + 区间统计）
+    ├── profile/         # 我的 / 个人信息 / 修改密码 / 应用信息
+    └── login/           # 登录页
 ```
 
 ## 编码约定

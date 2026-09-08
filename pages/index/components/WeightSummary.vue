@@ -13,10 +13,10 @@
 				<text v-else class="trend muted">{{ latest ? '暂无对比数据' : '快添加第一条记录吧' }}</text>
 			</view>
 		</view>
-		<view class="summary-card side">
+		<view class="summary-card side" hover-class="summary-card--hover" @click="goRecords">
 			<text class="summary-label">📝 记录数</text>
 			<text class="summary-value small">{{ records.length }}</text>
-			<text class="summary-unit">条</text>
+			<text class="summary-unit">条 ›</text>
 		</view>
 	</view>
 </template>
@@ -41,6 +41,11 @@
 		const diff = sorted[sorted.length - 1].weight - sorted[sorted.length - 2].weight
 		return +diff.toFixed(1)
 	})
+
+	// 点击记录数：跳转到记录列表页
+	const goRecords = () => {
+		uni.navigateTo({ url: '/pages/records/records' })
+	}
 </script>
 
 <style scoped>
@@ -65,6 +70,10 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
+	}
+	.summary-card--hover {
+		background: #f4faf7;
+		transform: scale(0.98);
 	}
 	.summary-label {
 		font-size: 24rpx;

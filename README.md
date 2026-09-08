@@ -28,14 +28,18 @@
 ├── manifest.json            # uni-app 应用配置（appid、各端打包配置）
 ├── pages.json               # 页面路由、tabBar 与全局样式
 ├── uni.scss                 # 公共样式变量
+├── components/              # 跨页面复用组件
+│   └── RecordForm.vue       # 录入 / 修改表单（首页新增 + 记录列表页编辑）
 ├── pages/
 │   ├── login/login.vue      # 登录页（启动页）
-│   ├── index/index.vue      # 首页：组合各组件
+│   ├── index/index.vue      # 首页：概览卡片 + 新增记录表单
 │   │   └── components/      # 首页专属组件
 │   │       ├── AppHeader.vue        # 顶部标题
 │   │       ├── BmiCard.vue          # BMI 分析卡片
-│   │       ├── WeightSummary.vue    # 数据概览
-│   │       ├── RecordForm.vue       # 录入 / 修改表单
+│   │       └── WeightSummary.vue    # 数据概览（记录数卡片可跳转记录列表页）
+│   ├── records/
+│   │   ├── records.vue      # 记录列表页：日期筛选（默认近7天）+ 上拉分页列表 + 编辑表单
+│   │   └── components/      # 记录列表页专属组件
 │   │       └── RecordList.vue       # 记录列表
 │   ├── data/
 │   │   └── data.vue         # 数据（tabBar 页）：日期范围选择 + 折线图 + 区间统计

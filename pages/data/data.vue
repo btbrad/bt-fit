@@ -65,6 +65,13 @@
 				<text :class="['stat-value', s.cls]">{{ s.text }}</text>
 			</view>
 		</view>
+
+		<!-- 查看记录列表入口 -->
+		<view class="card list-entry" hover-class="list-entry--hover" @click="goRecords">
+			<text class="list-entry-icon">📋</text>
+			<text class="list-entry-text">查看记录列表</text>
+			<text class="list-entry-arrow">›</text>
+		</view>
 	</view>
 </template>
 
@@ -230,6 +237,11 @@
 			{ label: '区间变化', text: `${change > 0 ? '+' : ''}${change.toFixed(1)} kg`, cls }
 		]
 	})
+
+	// 跳转记录列表页
+	const goRecords = () => {
+		uni.navigateTo({ url: '/pages/records/records' })
+	}
 
 	// 页面生命周期：未登录则跳回登录页；每次进入刷新数据与"今天"
 	onShow(() => {
@@ -415,5 +427,32 @@
 
 	.stat-value.down {
 		color: #14b886;
+	}
+
+	/* 查看记录列表入口 */
+	.list-entry {
+		margin-top: 24rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 12rpx;
+		padding: 28rpx;
+		background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+		box-shadow: 0 12rpx 30rpx rgba(16, 185, 129, 0.25);
+	}
+	.list-entry--hover {
+		transform: scale(0.98);
+	}
+	.list-entry-icon {
+		font-size: 30rpx;
+	}
+	.list-entry-text {
+		font-size: 30rpx;
+		font-weight: 600;
+		color: #ffffff;
+	}
+	.list-entry-arrow {
+		font-size: 34rpx;
+		color: rgba(255, 255, 255, 0.85);
 	}
 </style>

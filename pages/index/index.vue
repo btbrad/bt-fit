@@ -9,75 +9,29 @@
 		<!-- 数据概览 -->
 		<WeightSummary :records="records" />
 
-		<!-- 录入 / 修改 -->
-		<RecordForm ref="recordFormRef" :editing="editing" @submit="onSubmit" @cancel="editing = null" />
-
-		<!-- 列表 -->
-		<RecordList :records="records" @edit="onEdit" @remove="onRemove" />
-
-		<view v-if="records.length" class="load-more">
-			<text v-if="loadingMore">加载中...</text>
-			<text v-else-if="!hasMore">— 没有更多了 —</text>
-		</view>
+		<!-- 录入（修改请到记录列表页） -->
+		<RecordForm ref="recordFormRef" @submit="onSubmit" />
 	</view>
 </template>
 
 <script setup>
 	import { ref } from 'vue'
-	import { onShow, onReachBottom } from '@dcloudio/uni-app'
+	import { onShow } from '@dcloudio/uni-app'
 	import AppHeader from './components/AppHeader.vue'
 	import BmiCard from './components/BmiCard.vue'
 	import WeightSummary from './components/WeightSummary.vue'
-	import RecordForm from './components/RecordForm.vue'
-	import RecordList from './components/RecordList.vue'
+	import RecordForm from '@/components/RecordForm.vue'
 	import { addWeightRecordApi, getWeightRecordsApi } from '@/api/index.js'
 
 	const USER_KEY = 'bt_fit_user'
 
 	// 响应式状态
 	const records = ref([])
-	const editing = ref(null) // 正在编辑的记录对象，null 表示新增态
 	const recordFormRef = ref(null) // RecordForm 实例，用于新增成功后清空体重输入
 	const bmiCardRef = ref(null) // BmiCard 实例，用于页面 onShow 时刷新个人信息（如从个人信息页返回）
-	const PER_PAGE = 20 // 每页条数
-	const page = ref(1) // 当前页码
-	const hasMore = ref(true) // 是否还有下一页
-	const loadingMore = ref(false) // 上拉加载锁，防止重复触发
-
-	// 拉取指定页数据；refresh 为 true 时重置到第一页并清空列表
-	const fetchRecords = async (refresh = false) => {
-		if (loadingMore.value) return
-		if (!refresh && !hasMore.value) return
-		loadingMore.value = true
-		try {
-			const data = await getWeightRecordsApi({ page: page.value, per_page: PER_PAGE })
-			// 兼容后端直接返回数组，或 { list/items/records, total } 两种结构
-			const list = Array.isArray(data) ? data : (data.list || data.items || data.records || [])
-			const normalized = list.map(normalizeRecord)
-			records.value = refresh ? normalized : records.value.concat(normalized)
-			// 本页不满一页或已累计全部 total，说明没有更多
-			const total = Array.isArray(data) || data.total === undefined ? null : +data.total
-			hasMore.value = list.length === PER_PAGE && (total === null || records.value.length < total)
-			if (hasMore.value) page.value++
-		} catch (e) {
-			// 失败提示由 request 封装统一 toast
-		} finally {
-			loadingMore.value = false
-		}
-	}
-
-	// 首次进入 / 刷新：回到第一页
-	const loadRecords = () => {
-		page.value = 1
-		hasMore.value = true
-		records.value = []
-		fetchRecords(true)
-	}
-
-	// 上拉触底：加载下一页
-	const onReachBottomHandler = () => {
-		fetchRecords()
-	}
+	const PER_PAGE = 100 // 概览卡片需要全量数据，用大分页尽量一次拉全
+	const MAX_PAGES = 20 // 翻页安全上限，防止接口异常时死循环
+	const loading = ref(false) // 加载锁，防止重复触发
 
 	// 字段归一化：后端 id / recorded_at / weight -> 前端 id / date / weight
 	const normalizeRecord = (item) => ({
@@ -86,17 +40,32 @@
 		weight: +item.weight
 	})
 
-	// 表单提交：新增（调用接口后拉取最新列表）或更新（本地）
-	const onSubmit = async ({ id, date, weight }) => {
-		if (id) {
-			const idx = records.value.findIndex(r => r.id === id)
-			if (idx > -1) {
-				records.value.splice(idx, 1, { ...records.value[idx], date, weight })
+	// 翻页拉全所有记录，保证概览统计（记录数 / 最新体重 / BMI）准确
+	const loadRecords = async () => {
+		if (loading.value) return
+		loading.value = true
+		try {
+			const list = []
+			for (let p = 1; p <= MAX_PAGES; p++) {
+				const data = await getWeightRecordsApi(
+					{ page: p, per_page: PER_PAGE },
+					{ loading: p === 1 } // 仅第一页显示全局 loading，避免翻页闪烁
+				)
+				// 兼容后端直接返回数组，或 { list/items/records, total } 两种结构
+				const arr = Array.isArray(data) ? data : (data.list || data.items || data.records || [])
+				list.push(...arr.map(normalizeRecord))
+				if (arr.length < PER_PAGE) break // 本页不满，说明已拉完
 			}
-			uni.showToast({ title: '已更新 ✅', icon: 'none' })
-			editing.value = null
-			return
+			records.value = list
+		} catch (e) {
+			// 失败提示由 request 封装统一 toast
+		} finally {
+			loading.value = false
 		}
+	}
+
+	// 表单提交：新增（调用接口后拉取最新列表）
+	const onSubmit = async ({ date, weight }) => {
 		try {
 			await addWeightRecordApi({
 				weight,
@@ -104,33 +73,11 @@
 			})
 			uni.showToast({ title: '记录成功 🎉', icon: 'none' })
 			recordFormRef.value && recordFormRef.value.resetWeight()
-			// 重新拉取第一页，以服务端数据为准
+			// 重新拉取全量，以服务端数据为准
 			loadRecords()
 		} catch (e) {
 			// 失败提示由 request 封装统一 toast，这里只需保持表单不重置
 		}
-	}
-
-	// 点击列表项进入编辑
-	const onEdit = (item) => {
-		editing.value = item
-		uni.pageScrollTo({ scrollTop: 0, duration: 200 })
-	}
-
-	// 删除记录（二次确认）
-	const onRemove = (id) => {
-		uni.showModal({
-			title: '删除记录',
-			content: '确定要删除这条记录吗？',
-			confirmColor: '#ef4444',
-			success: res => {
-				if (res.confirm) {
-					records.value = records.value.filter(r => r.id !== id)
-					if (editing.value && editing.value.id === id) editing.value = null
-					uni.showToast({ title: '已删除 🗑️', icon: 'none' })
-				}
-			}
-		})
 	}
 
 	// 页面生命周期
@@ -144,9 +91,6 @@
 		loadRecords()
 		bmiCardRef.value && bmiCardRef.value.refresh()
 	})
-
-	// 上拉触底加载下一页
-	onReachBottom(onReachBottomHandler)
 </script>
 
 <style>
@@ -155,12 +99,5 @@
 		background: linear-gradient(180deg, #e8f5f0 0%, #f6f8f7 320rpx);
 		padding: 30rpx 28rpx 60rpx;
 		box-sizing: border-box;
-	}
-
-	.load-more {
-		margin-top: 24rpx;
-		text-align: center;
-		font-size: 24rpx;
-		color: #b6bfbb;
 	}
 </style>
