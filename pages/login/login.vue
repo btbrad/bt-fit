@@ -44,8 +44,6 @@
 			</button>
 		</view>
 
-		<!-- 底部提示 -->
-		<view class="footer-tip">演示账号：admin · 密码：123456</view>
 	</view>
 </template>
 
