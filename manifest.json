@@ -2,8 +2,8 @@
     "name" : "BTの体重",
     "appid" : "__UNI__C94AB3B",
     "description" : "记录体重的应用",
-    "versionName" : "0.0.3",
-    "versionCode" : 3,
+    "versionName" : "0.0.4",
+    "versionCode" : 4,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {
