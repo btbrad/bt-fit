@@ -25,3 +25,13 @@ export const addWeightRecordApi = (data) => {
 export const getWeightRecordsApi = (params, options = {}) => {
 	return $http.get('/api/weight-records', params, options)
 }
+
+/**
+ * 删除体重记录
+ * @param {number} recordId 记录 ID
+ * @param {Object} [options] 透传给 request 封装（如 { loading: false }）
+ * @returns {Promise} resolve 后端返回的 data
+ */
+export const deleteWeightRecordApi = (recordId, options = {}) => {
+	return $http.delete(`/api/weight-records/${recordId}`, {}, options)
+}

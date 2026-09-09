@@ -53,7 +53,7 @@
 	import { onShow, onReachBottom } from '@dcloudio/uni-app'
 	import RecordForm from '@/components/RecordForm.vue'
 	import RecordList from './components/RecordList.vue'
-	import { getWeightRecordsApi } from '@/api/index.js'
+	import { getWeightRecordsApi, deleteWeightRecordApi } from '@/api/index.js'
 
 	const USER_KEY = 'bt_fit_user'
 
@@ -206,17 +206,21 @@
 		uni.pageScrollTo({ scrollTop: 0, duration: 200 })
 	}
 
-	// 删除记录（二次确认）
+	// 删除记录（二次确认）：调真实接口，成功后再更新本地列表
 	const onRemove = (id) => {
 		uni.showModal({
 			title: '删除记录',
 			content: '确定要删除这条记录吗？',
 			confirmColor: '#ef4444',
-			success: res => {
-				if (res.confirm) {
+			success: async (res) => {
+				if (!res.confirm) return
+				try {
+					await deleteWeightRecordApi(id)
 					records.value = records.value.filter(r => r.id !== id)
 					if (editing.value && editing.value.id === id) editing.value = null
 					uni.showToast({ title: '已删除 🗑️', icon: 'none' })
+				} catch (e) {
+					// 失败提示由 request 封装统一 toast
 				}
 			}
 		})
