@@ -10,14 +10,14 @@
 			<text class="bmi-loading-text">正在计算 BMI...</text>
 		</view>
 
-		<!-- 未完善信息：引导去个人信息页 -->
+		<!-- 未完善信息：引导去个人信息页；未登录：引导去登录 -->
 		<view v-else-if="!status" class="bmi-empty" @click="goProfile">
-			<view class="bmi-empty-icon">📏</view>
+			<view class="bmi-empty-icon">{{ guest ? '🔐' : '📏' }}</view>
 			<view class="bmi-empty-body">
-				<text class="bmi-empty-title">完善身高体重，开启 BMI 分析</text>
-				<text class="bmi-empty-sub">前往「个人信息」填写身高与体重</text>
+				<text class="bmi-empty-title">{{ guest ? '登录后解锁 BMI 分析' : '完善身高体重，开启 BMI 分析' }}</text>
+				<text class="bmi-empty-sub">{{ guest ? '记录体重，获取你的身体质量指数' : '前往「个人信息」填写身高与体重' }}</text>
 			</view>
-			<view class="bmi-empty-btn">去完善 ›</view>
+			<view class="bmi-empty-btn">{{ guest ? '去登录 ›' : '去完善 ›' }}</view>
 		</view>
 
 		<!-- 已完善：BMI 数值 + 分级徽章 + 标准刻度尺 -->
@@ -56,14 +56,15 @@
 </template>
 
 <script setup>
-	import { ref, computed, onMounted } from 'vue'
+	import { ref, computed, watch, onMounted } from 'vue'
 	import { getProfileApi } from '@/api/index.js'
+	import { PROFILE_CACHE_KEY } from '@/utils/auth.js'
 
-	// 个人信息本地缓存键：首页进入先用缓存渲染，再拉接口刷新
-	const PROFILE_CACHE_KEY = 'bt_fit_profile'
+	// 个人信息本地缓存键（见 utils/auth.js）：首页进入先用缓存渲染，再拉接口刷新
 
 	const props = defineProps({
-		records: { type: Array, default: () => [] }
+		records: { type: Array, default: () => [] },
+		guest: { type: Boolean, default: false } // 未登录：不请求/不读缓存，展示「去登录」引导
 	})
 
 	// WHO 国际标准分级：偏瘦 < 18.5，正常 18.5 ~ 24.9，超重 25 ~ 29.9，肥胖 >= 30
@@ -83,11 +84,13 @@
 	const initialWeight = ref('')
 	const loading = ref(false)
 
-	// 进入页面先读缓存，避免每次都闪一次加载态
-	const cached = uni.getStorageSync(PROFILE_CACHE_KEY)
-	if (cached && typeof cached === 'object') {
-		height.value = cached.height || ''
-		initialWeight.value = cached.initial_weight || ''
+	// 进入页面先读缓存，避免每次都闪一次加载态（未登录不读，避免展示他人缓存数据）
+	if (!props.guest) {
+		const cached = uni.getStorageSync(PROFILE_CACHE_KEY)
+		if (cached && typeof cached === 'object') {
+			height.value = cached.height || ''
+			initialWeight.value = cached.initial_weight || ''
+		}
 	}
 
 	// 最新体重：优先取最新一条记录，没有记录时回退到个人信息的初始体重
@@ -150,12 +153,28 @@
 		}
 	}
 
-	// 跳转个人信息页完善身高体重
+	// 跳转个人信息页完善身高体重；未登录则引导去登录
 	const goProfile = () => {
+		if (props.guest) {
+			uni.navigateTo({ url: '/pages/login/login' })
+			return
+		}
 		uni.navigateTo({ url: '/pages/profile/info' })
 	}
 
-	onMounted(refresh)
+	// 未登录不请求接口（小程序上架要求未登录可浏览）
+	onMounted(() => {
+		if (!props.guest) refresh()
+	})
+
+	// 变为未登录（如退出登录后切回首页 tab）：清空组件内残留的上个账号数据
+	watch(() => props.guest, guest => {
+		if (guest) {
+			height.value = ''
+			initialWeight.value = ''
+			loading.value = false
+		}
+	})
 
 	// 供父组件在页面 onShow 时调用（如从个人信息页返回后刷新身高）
 	defineExpose({ refresh })

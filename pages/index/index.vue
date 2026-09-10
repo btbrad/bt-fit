@@ -3,14 +3,14 @@
 		<!-- 顶部标题 -->
 		<AppHeader />
 
-		<!-- BMI 分析卡片（顶部） -->
-		<BmiCard ref="bmiCardRef" :records="records" />
+		<!-- BMI 分析卡片（顶部）：未登录展示「去登录」引导，不请求接口 -->
+		<BmiCard ref="bmiCardRef" :records="records" :guest="!isLoggedInRef" />
 
-		<!-- 数据概览 -->
-		<WeightSummary :records="records" />
+		<!-- 数据概览：未登录为空数据，点击记录数跳登录页 -->
+		<WeightSummary :records="records" :guest="!isLoggedInRef" />
 
-		<!-- 录入（修改请到记录列表页） -->
-		<RecordForm ref="recordFormRef" @submit="onSubmit" />
+		<!-- 录入（修改请到记录列表页）：未登录点击记录跳登录页 -->
+		<RecordForm ref="recordFormRef" :guest="!isLoggedInRef" @submit="onSubmit" />
 	</view>
 </template>
 
@@ -22,10 +22,10 @@
 	import WeightSummary from './components/WeightSummary.vue'
 	import RecordForm from '@/components/RecordForm.vue'
 	import { addWeightRecordApi, getWeightRecordsApi } from '@/api/index.js'
-
-	const USER_KEY = 'bt_fit_user'
+	import { isLoggedIn } from '@/utils/auth.js'
 
 	// 响应式状态
+	const isLoggedInRef = ref(false) // 是否已登录（未登录时卡片空数据 + 去登录引导）
 	const records = ref([])
 	const recordFormRef = ref(null) // RecordForm 实例，用于新增成功后清空体重输入
 	const bmiCardRef = ref(null) // BmiCard 实例，用于页面 onShow 时刷新个人信息（如从个人信息页返回）
@@ -82,10 +82,10 @@
 
 	// 页面生命周期
 	onShow(() => {
-		// 登录态校验：未登录则跳回登录页
-		const user = uni.getStorageSync(USER_KEY)
-		if (!user || !user.name) {
-			uni.reLaunch({ url: '/pages/login/login' })
+		// 未登录可正常浏览首页：登录态卡片展示为空数据，不请求接口（小程序上架要求）
+		isLoggedInRef.value = isLoggedIn()
+		if (!isLoggedInRef.value) {
+			records.value = []
 			return
 		}
 		loadRecords()

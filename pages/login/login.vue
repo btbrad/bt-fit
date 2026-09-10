@@ -51,9 +51,7 @@
 	import { ref, computed } from 'vue'
 	import { onLoad } from '@dcloudio/uni-app'
 	import { loginApi } from '@/api/index.js'
-
-	const USER_KEY = 'bt_fit_user'
-	const TOKEN_KEY = 'bt_fit_token'
+	import { USER_KEY, TOKEN_KEY, PROFILE_CACHE_KEY } from '@/utils/auth.js'
 
 	// 响应式状态
 	const username = ref('')
@@ -80,6 +78,8 @@
 				name: data.username || username.value.trim(),
 				loginTime: Date.now()
 			})
+			// 清除上个账号的个人资料缓存，避免首页 BMI 卡片读到旧数据
+			uni.removeStorageSync(PROFILE_CACHE_KEY)
 
 			uni.showToast({ title: '登录成功 🎉', icon: 'none' })
 			setTimeout(() => {

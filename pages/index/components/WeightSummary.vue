@@ -10,7 +10,7 @@
 				<text v-if="trend !== null" :class="['trend', trend < 0 ? 'down' : 'up']">
 					{{ trend < 0 ? '📉' : '📈' }} 较上次 {{ trend > 0 ? '+' : '' }}{{ trend.toFixed(1) }} kg
 				</text>
-				<text v-else class="trend muted">{{ latest ? '暂无对比数据' : '快添加第一条记录吧' }}</text>
+				<text v-else class="trend muted">{{ guest ? '登录后开始记录 📝' : (latest ? '暂无对比数据' : '快添加第一条记录吧') }}</text>
 			</view>
 		</view>
 		<view class="summary-card side" hover-class="summary-card--hover" @click="goRecords">
@@ -25,7 +25,8 @@
 	import { computed } from 'vue'
 
 	const props = defineProps({
-		records: { type: Array, default: () => [] }
+		records: { type: Array, default: () => [] },
+		guest: { type: Boolean, default: false } // 未登录：空数据展示 + 点击跳登录页
 	})
 
 	// 最近一条记录（按日期升序取末位）
@@ -42,9 +43,9 @@
 		return +diff.toFixed(1)
 	})
 
-	// 点击记录数：跳转到记录列表页
+	// 点击记录数：跳转到记录列表页；未登录引导去登录
 	const goRecords = () => {
-		uni.navigateTo({ url: '/pages/records/records' })
+		uni.navigateTo({ url: props.guest ? '/pages/login/login' : '/pages/records/records' })
 	}
 </script>
 

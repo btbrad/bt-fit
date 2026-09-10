@@ -6,17 +6,19 @@
 				<image v-if="avatarUrl" class="avatar-img" :src="avatarUrl" mode="aspectFill" />
 				<text v-else class="avatar-text">{{ avatarText }}</text>
 			</view>
-			<text class="nickname">{{ nickname }}</text>
-			<view class="slogan">
+			<text class="nickname">{{ isLoggedInRef ? nickname : '未登录' }}</text>
+			<view v-if="isLoggedInRef" class="slogan">
 				<text class="slogan-text">🌿 坚持记录 · 见证改变</text>
 			</view>
+			<!-- 未登录：登录入口（小程序上架要求未登录也可浏览「我的」） -->
+			<button v-else class="login-btn" @click="goLogin">登录 / 注册</button>
 		</view>
 
 		<!-- 菜单区域 -->
 		<view class="menu">
 			<view
 				class="menu-item"
-				v-for="item in menus"
+				v-for="item in visibleMenus"
 				:key="item.key"
 				hover-class="menu-item--hover"
 				:hover-stay-time="80"
@@ -30,8 +32,8 @@
 			</view>
 		</view>
 
-		<!-- 底部退出登录 -->
-		<view class="logout-wrap">
+		<!-- 底部退出登录（仅已登录展示） -->
+		<view v-if="isLoggedInRef" class="logout-wrap">
 			<button class="logout-btn" @click="onLogout">退出登录</button>
 		</view>
 	</view>
@@ -41,16 +43,16 @@
 	import { ref, computed } from 'vue'
 	import { onShow } from '@dcloudio/uni-app'
 	import { getProfileApi, logoutApi } from '@/api/index.js'
-
-	const USER_KEY = 'bt_fit_user'
-	const TOKEN_KEY = 'bt_fit_token'
+	import { isLoggedIn, clearAuth, USER_KEY } from '@/utils/auth.js'
 
 	// 响应式状态
+	const isLoggedInRef = ref(false) // 是否已登录（决定登录态/未登录态展示）
 	const nickname = ref('')
 	const avatarUrl = ref('')
 
-	// 头像展示昵称首字
+	// 头像展示昵称首字；未登录展示占位图标
 	const avatarText = computed(() => {
+		if (!isLoggedInRef.value) return '👤'
 		const name = nickname.value.trim()
 		return name ? name.charAt(0).toUpperCase() : '我'
 	})
@@ -75,8 +77,22 @@
 		{ key: 'about', label: '应用信息', icon: 'ℹ️', bg: 'linear-gradient(135deg, #81c784 0%, #66bb6a 100%)' }
 	]
 
-	// 菜单点击：个人信息/账号安全/应用信息跳转对应页面
+	// 未登录只展示可浏览的「应用信息」，其余需登录后可见
+	const visibleMenus = computed(() =>
+		isLoggedInRef.value ? menus : menus.filter(m => m.key === 'about')
+	)
+
+	// 跳转登录页
+	const goLogin = () => {
+		uni.navigateTo({ url: '/pages/login/login' })
+	}
+
+	// 菜单点击：个人信息/账号安全/应用信息跳转对应页面；未登录访问登录项时兜底跳登录页
 	const onMenuTap = (item) => {
+		if (!isLoggedInRef.value && item.key !== 'about') {
+			goLogin()
+			return
+		}
 		if (item.key === 'info') {
 			uni.navigateTo({ url: '/pages/profile/info' })
 			return
@@ -92,7 +108,7 @@
 		uni.showToast({ title: `${item.label}（开发中）`, icon: 'none' })
 	}
 
-	// 退出登录：二次确认后调用后端接口，成功再清空登录态并回到登录页
+	// 退出登录：二次确认后调用后端接口，成功再清空登录态并留在本页（变为未登录态）
 	const onLogout = () => {
 		uni.showModal({
 			title: '退出登录',
@@ -102,12 +118,9 @@
 				if (!res.confirm) return
 				try {
 					await logoutApi()
-					uni.removeStorageSync(TOKEN_KEY)
-					uni.removeStorageSync(USER_KEY)
+					clearAuth()
+					init()
 					uni.showToast({ title: '已退出登录', icon: 'none' })
-					setTimeout(() => {
-						uni.reLaunch({ url: '/pages/login/login' })
-					}, 400)
 				} catch (err) {
 					// 失败提示已由 request.js 统一 toast，接口失败则保持登录态
 				}
@@ -115,16 +128,21 @@
 		})
 	}
 
-	// 页面生命周期：未登录则跳回登录页
-	onShow(() => {
-		const user = uni.getStorageSync(USER_KEY)
-		if (!user || !user.name) {
-			uni.reLaunch({ url: '/pages/login/login' })
+	// 每次进入（或退出登录后）按登录态初始化页面：未登录展示引导态，不请求接口
+	const init = () => {
+		isLoggedInRef.value = isLoggedIn()
+		if (!isLoggedInRef.value) {
+			nickname.value = ''
+			avatarUrl.value = ''
 			return
 		}
+		const user = uni.getStorageSync(USER_KEY)
 		nickname.value = user.name
 		fetchProfile()
-	})
+	}
+
+	// 页面生命周期
+	onShow(init)
 </script>
 
 <style scoped>
@@ -185,6 +203,25 @@
 	.slogan-text {
 		font-size: 24rpx;
 		color: #4c8a75;
+	}
+
+	/* 未登录：登录入口按钮 */
+	.login-btn {
+		margin-top: 44rpx;
+		width: 100%;
+		height: 84rpx;
+		line-height: 84rpx;
+		border-radius: 42rpx;
+		background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+		color: #ffffff;
+		font-size: 30rpx;
+		font-weight: 600;
+		letter-spacing: 4rpx;
+		border: none;
+		box-shadow: 0 8rpx 20rpx rgba(16, 185, 129, 0.25);
+	}
+	.login-btn::after {
+		border: none;
 	}
 
 	/* 菜单区域：横条竖排 */

@@ -1,77 +1,88 @@
 <template>
 	<view class="page">
-		<!-- 时间范围选择 -->
-		<view class="card range-card">
-			<view class="range-tabs">
-				<view
-					v-for="p in presets"
-					:key="p.key"
-					:class="['range-tab', preset === p.key ? 'range-tab--active' : '']"
-					hover-class="range-tab--hover"
-					:hover-stay-time="80"
-					@click="onPresetTap(p.key)"
-				>
-					{{ p.label }}
-				</view>
-			</view>
+		<!-- 未登录：引导空态（小程序上架要求未登录也可浏览） -->
+		<view v-if="!isLoggedInRef" class="card guest-card">
+			<view class="guest-icon">📉</view>
+			<text class="guest-title">登录后查看体重趋势</text>
+			<text class="guest-sub">登录记录体重后，这里将展示你的趋势曲线与区间统计</text>
+			<button class="guest-btn" @click="goLogin">去登录</button>
+		</view>
 
-			<!-- 自定义：起止日期选择 -->
-			<view v-if="preset === 'custom'" class="range-pickers">
-				<picker mode="date" :value="startDate" :end="endDate" @change="e => onDateChange(e.detail.value, 'start')">
-					<view class="picker-box">
-						<text class="picker-label">开始</text>
-						<text class="picker-value">{{ startDate }}</text>
+		<!-- 已登录：时间范围 + 折线图 + 区间统计 -->
+		<template v-else>
+			<!-- 时间范围选择 -->
+			<view class="card range-card">
+				<view class="range-tabs">
+					<view
+						v-for="p in presets"
+						:key="p.key"
+						:class="['range-tab', preset === p.key ? 'range-tab--active' : '']"
+						hover-class="range-tab--hover"
+						:hover-stay-time="80"
+						@click="onPresetTap(p.key)"
+					>
+						{{ p.label }}
 					</view>
-				</picker>
-				<text class="picker-sep">至</text>
-				<picker mode="date" :value="endDate" :start="startDate" :end="todayStr" @change="e => onDateChange(e.detail.value, 'end')">
-					<view class="picker-box">
-						<text class="picker-label">结束</text>
-						<text class="picker-value">{{ endDate }}</text>
+				</view>
+
+				<!-- 自定义：起止日期选择 -->
+				<view v-if="preset === 'custom'" class="range-pickers">
+					<picker mode="date" :value="startDate" :end="endDate" @change="e => onDateChange(e.detail.value, 'start')">
+						<view class="picker-box">
+							<text class="picker-label">开始</text>
+							<text class="picker-value">{{ startDate }}</text>
+						</view>
+					</picker>
+					<text class="picker-sep">至</text>
+					<picker mode="date" :value="endDate" :start="startDate" :end="todayStr" @change="e => onDateChange(e.detail.value, 'end')">
+						<view class="picker-box">
+							<text class="picker-label">结束</text>
+							<text class="picker-value">{{ endDate }}</text>
+						</view>
+					</picker>
+				</view>
+			</view>
+
+			<!-- 体重折线图（uCharts qiun-data-charts 组件） -->
+			<view class="card chart-card">
+				<view class="chart-head">
+					<view class="chart-title">
+						<uni-icons type="bars" :size="18" color="#10b981" />
+						<text class="chart-title-text">体重趋势</text>
 					</view>
-				</picker>
-			</view>
-		</view>
-
-		<!-- 体重折线图（uCharts qiun-data-charts 组件） -->
-		<view class="card chart-card">
-			<view class="chart-head">
-				<view class="chart-title">
-					<uni-icons type="bars" :size="18" color="#10b981" />
-					<text class="chart-title-text">体重趋势</text>
+					<text class="chart-count">{{ loading ? '加载中...' : chartRecords.length ? `共 ${chartRecords.length} 条记录` : '' }}</text>
 				</view>
-				<text class="chart-count">{{ loading ? '加载中...' : chartRecords.length ? `共 ${chartRecords.length} 条记录` : '' }}</text>
-			</view>
-			<view class="chart-box">
-				<qiun-data-charts
-					v-if="chartRecords.length"
-					type="line"
-					canvasId="weightTrendChart"
-					:canvas2d="true"
-					:chartData="chartData"
-					:opts="chartOpts"
-				/>
-				<view v-else class="chart-empty">
-					<text class="chart-empty-icon">📉</text>
-					<text class="chart-empty-text">{{ loading ? '加载中...' : '该时间段暂无记录' }}</text>
+				<view class="chart-box">
+					<qiun-data-charts
+						v-if="chartRecords.length"
+						type="line"
+						canvasId="weightTrendChart"
+						:canvas2d="true"
+						:chartData="chartData"
+						:opts="chartOpts"
+					/>
+					<view v-else class="chart-empty">
+						<text class="chart-empty-icon">📉</text>
+						<text class="chart-empty-text">{{ loading ? '加载中...' : '该时间段暂无记录' }}</text>
+					</view>
 				</view>
 			</view>
-		</view>
 
-		<!-- 区间统计 -->
-		<view v-if="statItems.length" class="card stats-card">
-			<view class="stat-item" v-for="s in statItems" :key="s.label">
-				<text class="stat-label">{{ s.label }}</text>
-				<text :class="['stat-value', s.cls]">{{ s.text }}</text>
+			<!-- 区间统计 -->
+			<view v-if="statItems.length" class="card stats-card">
+				<view class="stat-item" v-for="s in statItems" :key="s.label">
+					<text class="stat-label">{{ s.label }}</text>
+					<text :class="['stat-value', s.cls]">{{ s.text }}</text>
+				</view>
 			</view>
-		</view>
 
-		<!-- 查看记录列表入口 -->
-		<view class="card list-entry" hover-class="list-entry--hover" @click="goRecords">
-			<text class="list-entry-icon">📋</text>
-			<text class="list-entry-text">查看记录列表</text>
-			<text class="list-entry-arrow">›</text>
-		</view>
+			<!-- 查看记录列表入口 -->
+			<view class="card list-entry" hover-class="list-entry--hover" @click="goRecords">
+				<text class="list-entry-icon">📋</text>
+				<text class="list-entry-text">查看记录列表</text>
+				<text class="list-entry-arrow">›</text>
+			</view>
+		</template>
 	</view>
 </template>
 
@@ -79,8 +90,9 @@
 	import { ref, computed } from 'vue'
 	import { onShow } from '@dcloudio/uni-app'
 	import { getWeightRecordsApi } from '@/api/index.js'
+	import { isLoggedIn } from '@/utils/auth.js'
 
-	const USER_KEY = 'bt_fit_user'
+	const isLoggedInRef = ref(false) // 是否已登录（决定渲染图表内容还是引导空态）
 	const MAX_PAGES = 20 // 翻页安全上限，防止接口异常时死循环
 	const PER_PAGE = 100 // 图表用大分页，尽量一次拉全
 
@@ -243,13 +255,15 @@
 		uni.navigateTo({ url: '/pages/records/records' })
 	}
 
-	// 页面生命周期：未登录则跳回登录页；每次进入刷新数据与"今天"
+	// 跳转登录页（引导空态按钮）
+	const goLogin = () => {
+		uni.navigateTo({ url: '/pages/login/login' })
+	}
+
+	// 页面生命周期：未登录可浏览，展示引导空态不请求接口；每次进入刷新数据与"今天"
 	onShow(() => {
-		const user = uni.getStorageSync(USER_KEY)
-		if (!user || !user.name) {
-			uni.reLaunch({ url: '/pages/login/login' })
-			return
-		}
+		isLoggedInRef.value = isLoggedIn()
+		if (!isLoggedInRef.value) return
 		todayStr.value = fmtDate(new Date())
 		loadData()
 	})
@@ -268,6 +282,48 @@
 		border-radius: 36rpx;
 		padding: 30rpx;
 		box-shadow: 0 12rpx 40rpx rgba(16, 185, 129, 0.08);
+	}
+
+	/* 未登录引导空态 */
+	.guest-card {
+		margin-top: 40rpx;
+		padding: 80rpx 40rpx;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+	.guest-icon {
+		font-size: 80rpx;
+	}
+	.guest-title {
+		margin-top: 24rpx;
+		font-size: 32rpx;
+		font-weight: 700;
+		color: #1f2d2a;
+	}
+	.guest-sub {
+		margin-top: 14rpx;
+		font-size: 24rpx;
+		color: #8a9994;
+		text-align: center;
+		line-height: 1.6;
+	}
+	.guest-btn {
+		margin-top: 44rpx;
+		width: 100%;
+		height: 84rpx;
+		line-height: 84rpx;
+		border-radius: 42rpx;
+		background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+		color: #ffffff;
+		font-size: 30rpx;
+		font-weight: 600;
+		letter-spacing: 4rpx;
+		border: none;
+		box-shadow: 0 8rpx 20rpx rgba(16, 185, 129, 0.25);
+	}
+	.guest-btn::after {
+		border: none;
 	}
 
 	/* 时间范围选择 */

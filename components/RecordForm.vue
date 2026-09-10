@@ -1,6 +1,7 @@
   <template>
 	<view class="form-card">
 		<view class="form-title">{{ editing ? '✏️ 修改记录' : '➕ 新增记录' }}</view>
+		<text v-if="guest" class="form-guest-tip">🔒 登录后可保存记录</text>
 		<view class="form-row">
 			<view class="form-item">
 				<text class="form-label">📅 日期</text>
@@ -24,7 +25,8 @@
 	import { reactive, watch } from 'vue'
 
 	const props = defineProps({
-		editing: { type: Object, default: null }
+		editing: { type: Object, default: null },
+		guest: { type: Boolean, default: false } // 未登录：点击「记录」跳登录页
 	})
 	const emit = defineEmits(['submit', 'cancel'])
 
@@ -57,6 +59,11 @@
 	}
 
 	const save = () => {
+		// 未登录：点击「记录」引导去登录，不校验不提交
+		if (props.guest) {
+			uni.navigateTo({ url: '/pages/login/login' })
+			return
+		}
 		const w = parseFloat(form.weight)
 		if (isNaN(w) || w <= 0 || w > 500) {
 			uni.showToast({ title: '请输入有效体重 😅', icon: 'none' })
@@ -94,6 +101,13 @@
 		font-weight: 700;
 		color: #1f2d2a;
 		margin-bottom: 24rpx;
+	}
+	/* 未登录提示 */
+	.form-guest-tip {
+		display: block;
+		margin: -12rpx 0 24rpx;
+		font-size: 22rpx;
+		color: #aab4b0;
 	}
 	.form-row {
 		display: flex;

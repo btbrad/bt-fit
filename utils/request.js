@@ -14,10 +14,10 @@
 // 真实环境地址放在 config/env.local.js（已被 .gitignore 忽略，不进仓库）；
 // 仓库内只保留 config/env.example.js 模板。env.local.js 不存在时回退到示例配置（本地开发）。
 import envConfig from '@/config/env.local.js'
+import { TOKEN_KEY, clearAuth } from '@/utils/auth.js'
 
 const BASE_URL = envConfig.baseUrl || 'http://127.0.0.1:5000'
 const TIMEOUT = envConfig.timeout || 10000 // 请求超时（毫秒）
-const TOKEN_KEY = 'bt_fit_token' // 登录态 token 的存储键
 const LOGIN_PAGE = '/pages/login/login' // 登录失效后跳转的页面
 
 // 公共请求头（可按需扩展）
@@ -122,10 +122,13 @@ function request(options = {}) {
 	})
 }
 
-// 登录态失效：清除本地登录信息并跳转登录页
+// 登录态失效处理：
+// 本地有 token 却返回 401，说明会话过期 → 清除登录态并跳转登录页；
+// 游客（本地无 token）误触发 401 时静默处理，不打扰未登录浏览（小程序上架要求未登录可浏览）
 function handleUnauthorized() {
-	uni.removeStorageSync(TOKEN_KEY)
-	uni.removeStorageSync('bt_fit_user')
+	const hadToken = !!uni.getStorageSync(TOKEN_KEY)
+	clearAuth()
+	if (!hadToken) return
 	uni.showToast({ title: '登录已过期，请重新登录', icon: 'none' })
 	setTimeout(() => {
 		uni.reLaunch({ url: LOGIN_PAGE })
