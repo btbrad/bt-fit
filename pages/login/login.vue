@@ -1,11 +1,11 @@
 <template>
-	<view class="page">
+	<view class="page" :style="pageStyle">
 		<!-- 品牌区 -->
 		<view class="brand">
 			<view class="brand-icon">
-				<text class="brand-emoji">⚖️</text>
+				<image class="brand-logo" src="/static/logo.png" mode="aspectFit" />
 			</view>
-			<text class="brand-name">体重记录</text>
+			<text class="brand-name">BT体重记录</text>
 			<text class="brand-sub">坚持记录，见证改变 💪</text>
 		</view>
 
@@ -18,7 +18,7 @@
 						class="field-input"
 						v-model="username"
 						placeholder="请输入用户名"
-						placeholder-style="color:#a6bed4"
+						placeholder-style="color:#aab4b0"
 						:maxlength="20"
 					/>
 				</view>
@@ -32,7 +32,7 @@
 						v-model="password"
 						:password="!showPassword"
 						placeholder="请输入密码"
-						placeholder-style="color:#a6bed4"
+						placeholder-style="color:#aab4b0"
 						:maxlength="20"
 					/>
 					<text class="toggle" @click="showPassword = !showPassword">{{ showPassword ? '隐藏' : '显示' }}</text>
@@ -57,6 +57,18 @@
 	const username = ref('')
 	const password = ref('')
 	const showPassword = ref(false)
+
+	// 顶部留白：本页为自定义导航栏（navigationStyle: custom），需自行避开状态栏。
+	// 状态栏高度在 APP / 微信小程序取设备实际值，H5 等取不到时按 0 处理；
+	// 再叠加 44px 自定义导航栏（微信胶囊按钮所在区域）+ 24px 留白，保证各端都不贴顶。
+	const getStatusBarHeight = () => {
+		try {
+			return uni.getSystemInfoSync().statusBarHeight || 0
+		} catch (e) {
+			return 0
+		}
+	}
+	const pageStyle = { paddingTop: `${getStatusBarHeight() + 44 + 24}px` }
 
 	const canSubmit = computed(() => username.value.trim() !== '' && password.value !== '')
 
@@ -102,7 +114,8 @@
 <style scoped>
 	.page {
 		min-height: 100vh;
-		background: linear-gradient(180deg, #e6f2fe 0%, #f5f9fd 420rpx);
+		background: linear-gradient(180deg, #e8f5f0 0%, #f6f8f7 420rpx);
+		/* 顶部留白由 pageStyle 按状态栏高度动态计算（APP / 小程序），此处仅作兜底 */
 		padding: 100rpx 48rpx 60rpx;
 		box-sizing: border-box;
 		display: flex;
@@ -120,26 +133,27 @@
 		width: 140rpx;
 		height: 140rpx;
 		border-radius: 44rpx;
-		background: linear-gradient(135deg, #5aa9f5 0%, #3b82f6 100%);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		box-shadow: 0 16rpx 32rpx rgba(59, 130, 246, 0.25);
+		box-shadow: 0 16rpx 32rpx rgba(16, 185, 129, 0.25);
 	}
-	.brand-emoji {
-		font-size: 68rpx;
+	.brand-logo {
+		width: 100%;
+		height: 100%;
+		border-radius: 44rpx;
 	}
 	.brand-name {
 		margin-top: 30rpx;
 		font-size: 46rpx;
 		font-weight: 700;
-		color: #1f2a3a;
+		color: #1f2d2a;
 		letter-spacing: 4rpx;
 	}
 	.brand-sub {
 		margin-top: 12rpx;
 		font-size: 26rpx;
-		color: #7d92a8;
+		color: #7a8a85;
 	}
 
 	/* 登录卡片 */
@@ -150,7 +164,7 @@
 		border-radius: 36rpx;
 		padding: 56rpx 44rpx 48rpx;
 		box-sizing: border-box;
-		box-shadow: 0 12rpx 40rpx rgba(59, 130, 246, 0.08);
+		box-shadow: 0 12rpx 40rpx rgba(16, 185, 129, 0.08);
 	}
 
 	.field {
@@ -159,30 +173,30 @@
 	.field-label {
 		display: block;
 		font-size: 26rpx;
-		color: #5b7691;
+		color: #8a9994;
 		margin-bottom: 14rpx;
 	}
 	.field-control {
 		display: flex;
 		align-items: center;
-		background: #f0f7fe;
+		background: #f4faf7;
 		border: 2rpx solid transparent;
 		border-radius: 20rpx;
 		padding: 0 24rpx;
 		transition: border-color 0.2s;
 	}
 	.field-control:focus-within {
-		border-color: #3b82f6;
+		border-color: #10b981;
 	}
 	.field-input {
 		flex: 1;
 		height: 92rpx;
 		font-size: 30rpx;
-		color: #1f2a3a;
+		color: #1f2d2a;
 	}
 	.toggle {
 		font-size: 24rpx;
-		color: #3b82f6;
+		color: #10b981;
 		padding: 10rpx 0 10rpx 20rpx;
 	}
 
@@ -192,13 +206,13 @@
 		height: 92rpx;
 		line-height: 92rpx;
 		border-radius: 46rpx;
-		background: linear-gradient(135deg, #5aa9f5 0%, #3b82f6 100%);
+		background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
 		color: #ffffff;
 		font-size: 32rpx;
 		font-weight: 600;
 		letter-spacing: 12rpx;
 		border: none;
-		box-shadow: 0 12rpx 24rpx rgba(59, 130, 246, 0.3);
+		box-shadow: 0 12rpx 24rpx rgba(16, 185, 129, 0.3);
 	}
 	.login-btn::after {
 		border: none;
@@ -211,6 +225,6 @@
 	.footer-tip {
 		margin-top: 48rpx;
 		font-size: 22rpx;
-		color: #a6bed4;
+		color: #aab4b0;
 	}
 </style>
